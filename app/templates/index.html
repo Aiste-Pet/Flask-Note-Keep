@@ -1,0 +1,14 @@
+{% extends 'base.html' %} {% block title %}Home{% endblock %} {% block main %}
+{% if current_user.is_authenticated %}
+<h2 class="mb-5 mx-auto">Hello, {{ current_user.email }}</h2>
+<h3 class="mb-5 mx-auto"><a href="{{ url_for('groups') }}">Your groups</a></h3>
+{% else %}
+<p class="text-center">
+  NoteMate is a note-taking app that allows users to create and organize notes
+  in a simple and efficient way. With NoteMate, users can create notes with text
+  and images, categorize them, and easily find them with the search and filter
+  features.
+  <a href="{{ url_for('registration') }}">Create your account now</a> and start
+  saving your notes with ease!
+</p>
+{% endif %} {% endblock %}

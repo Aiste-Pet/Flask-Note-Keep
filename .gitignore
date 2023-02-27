@@ -1,0 +1,9 @@
+.vscode
+DS_STORE
+venv/
+__pycache__
+
+# Ignore .env files
+.env
+.env.local
+seed_data.py

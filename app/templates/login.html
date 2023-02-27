@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Prisijunkite{% endblock %}
+
+{% block main %}
+    <div class="content-section col-6 mx-auto">
+        <form method="POST" action="{{ url_for('login') }}">
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                <legend class="mb-4 font-weight-bold">Login</legend>
+                <div class="form-group">
+                    {{ form.email.label(class="form-control-label") }}
+                    {% if form.email.errors %}
+                        {{ form.email(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.email.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.email(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.password.label(class="form-control-label") }}
+                    {% if form.password.errors %}
+                        {{ form.password(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.password.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.password(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+                <div class="form-check mt-3">
+                    {{ form.remember(class="form-check-input") }}
+                    {{ form.remember.label(class="form-check-label") }}
+                </div>
+            </fieldset>
+            <button class="btn btn-primary mt-3" type="submit">Login</button>
+        </form>
+    </div>
+    <div class="border-top mt-3 pt-3  col-6 mx-auto">
+      <small class="text-muted">
+        Don't have an account yet? <a class="ml-2" href="{{ url_for('registration') }}">Create new account</a>
+      </small>
+    </div>
+    <div class="mt-3 col-6 mx-auto">
+      <small class="text-muted">
+        Forgot your password? <a class="ml-2" href="{{ url_for('request_reset_password') }}">Request a new password</a>
+      </small>
+    </div>
+{% endblock main %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Account profile{% endblock %}
+
+{% block main %}
+<div class="content-section">
+    <form method="POST" action="{{ url_for('profile') }}" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        <fieldset class="form-group">
+            <legend class="border-bottom mb-4">Your profile</legend>
+            <img class="rounded-circle account-img" src="{{ picture }}">
+            <div class="form-group">
+                {{ form.email.label(class="form-control-label") }}
+                {% if form.email.errors %}
+                {{ form.email(class="form-control form-control-lg is-invalid") }}
+                <div class="invalid-feedback">
+                    {% for error in form.email.errors %}
+                    <span>{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {% else %}
+                {{ form.email(class="form-control form-control-lg") }}
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.picture.label() }}
+                {{ form.picture(class="form-control-file") }}
+                {% if form.picture.errors %}
+                    {% for error in form.picture.errors %}
+                        <span class="text-danger">{{ error }}</span></br>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </fieldset>
+        <button class="btn btn-primary mt-3" type="submit">Update profile</button>
+    </form>
+</div>
+{% endblock main %}
