@@ -1,0 +1,48 @@
+.bg-primary {
+    background-color: #ddd3f3 !important;
+}
+
+.bg-primary:hover {
+    background-color: #cfbdf5 !important;
+}
+
+.btn-primary {
+    background-color: #866cc4 !important;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #6b4fae !important;
+}
+
+a:link,
+a:visited,
+a:hover,
+a:active {
+    text-decoration: none;
+}
+
+.card-title {
+    /* word-wrap: break-word !important; */
+    width: 75%;
+}
+
+.reset-btn {
+    border: none;
+    margin: 0;
+    padding: 0;
+    width: auto;
+    overflow: visible;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    line-height: normal;
+}
+
+.plus-icon {
+    fill: #6b4fae !important;
+}
+
+.disaplayInput {
+    display: none;
+}

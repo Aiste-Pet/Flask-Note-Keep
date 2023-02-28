@@ -1,7 +1,50 @@
-{% extends 'base.html' %} {% block title %}Home{% endblock %} {% block main %}
-{% if current_user.is_authenticated %}
-<h2 class="mb-5 mx-auto">Hello, {{ current_user.email }}</h2>
-<h3 class="mb-5 mx-auto"><a href="{{ url_for('groups') }}">Your groups</a></h3>
+{% extends 'base.html' %} {% block title %}Your Notes{% endblock %} {% block
+main %} {% if current_user.is_authenticated %}
+<div class="mb-5 d-flex justify-content-end">
+  <button type="button" class="btn btn-primary btn-lg pd-2">
+    <a href="{{ url_for('create_note') }}" class="text-white"
+      ><b>Create New Note</b>
+    </a>
+  </button>
+</div>
+<div class="container d-flex col-12 justify-content-around flex-wrap">
+  {% for note in notes %}
+
+  <div
+    class="card mb-5 bg-primary shadow p-3 mb-5 rounded"
+    style="width: 18rem"
+  >
+    <div class="card-body">
+      <div
+        class="d-flex justify-content-between align-items-baseline flex-wrap"
+      >
+        <h5 class="card-title text-muted">{{ note.name }}</h5>
+        <a href="edit_note/{{note.id}}">
+          <img
+            src="{{ url_for('static', filename='pencil-solid.svg') }}"
+            style="width: 20px; cursor: pointer"
+            alt=""
+        /></a>
+        <form
+          method="POST"
+          action="{{ url_for('delete_note', note_id=note.id) }}"
+          id="delete-note-form"
+        >
+          <button type="submit" class="reset-btn" id="delete-note-button">
+            <img
+              src="{{ url_for('static', filename='trash-can-regular.svg') }}"
+              style="width: 20px; cursor: pointer"
+              alt=""
+            />
+          </button>
+        </form>
+      </div>
+      <p class="card-subtitle mb-2 text-muted ">{{ note.category.name }}</p>
+      <p class="card-text font-weight-bold">{{ note.text }}</p>
+    </div>
+  </div>
+  {% endfor %}
+</div>
 {% else %}
 <p class="text-center">
   NoteMate is a note-taking app that allows users to create and organize notes

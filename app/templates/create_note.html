@@ -1,0 +1,57 @@
+{% extends 'base.html' %} {% block title %}Create Note{% endblock %} {% block
+main %}
+<div class="p-4 mx-auto">
+  <form method="POST" action="{{ url_for('create_note') }}">
+    {{ note_form.hidden_tag() }}
+    <div class="form-group pb-4">
+      <label for="name">Note name:</label>
+      <input type="text" class="form-control" name="name" />
+      {% for error in note_form.name.errors %}
+      <div style="color: red">{{ error }}</div>
+      {% endfor %}
+    </div>
+    <div class="form-group pb-4">
+      <label for="text">Note text:</label>
+      <textarea class="form-control" name="text"></textarea>
+      {% for error in note_form.text.errors %}
+      <div style="color: red">{{ error }}</div>
+      {% endfor %}
+    </div>
+    <div class="form-group">
+      <label for="category">Select category</label>
+      <select
+        class="form-control"
+        name="category"
+        style="display: inline"
+        onchange="showInput(this)"
+      >
+        {% for category in categories %}
+        <option>{{ category.name}}</option>
+        {% endfor %}
+        <option>Create new..</option>
+      </select>
+      {% for error in note_form.category.errors %}
+      <div style="color: red">{{ error }}</div>
+      {% endfor %}
+    </div>
+    <div id="inputDiv" class="form-outline disaplayInput mt-2">
+      <input
+        type="text"
+        id="form12"
+        name="other"
+        class="form-control"
+        style="display: none"
+        onblur="hideInput()"
+        disabled
+        placeholder="Write new category here"
+      />
+    </div>
+    <div class="d-flex justify-content-between align-items-baseline">
+      <button class="btn btn-primary mt-3" type="submit">Create</button>
+      <button class="btn btn-secondary mt-3" type="button">
+        <a class="text-white" href="{{ url_for('home') }}">Cancel</a>
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -6,8 +6,9 @@ from wtforms import (
     PasswordField,
     BooleanField,
 )
-from wtforms.validators import DataRequired, EqualTo, Email, ValidationError
+from wtforms.validators import DataRequired, EqualTo, Email, ValidationError, Length
 from app.models.User import User
+from app.models.Category import Category
 
 
 class RegistrationForm(FlaskForm):
@@ -51,3 +52,13 @@ class UserResetPasswordForm(FlaskForm):
     confirm_password = PasswordField(
         "Repeat password", [EqualTo("password", "Passwords must match.")]
     )
+
+
+class NoteForm(FlaskForm):
+    name = StringField("Name", [DataRequired(), Length(max=255)])
+    text = StringField("Text", [DataRequired()])
+    category = StringField("Category", [DataRequired(), Length(max=255)])
+
+
+class CategoryForm(FlaskForm):
+    name = StringField("Name", [DataRequired(), Length(max=255)])
