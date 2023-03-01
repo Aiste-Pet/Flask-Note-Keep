@@ -302,7 +302,7 @@ def edit_category(category_id):
     category = Category.query.get(category_id)
     data = request.form
     category_name = data.get("name")
-    validation = validate_category(category_name=category_name)
+    validation = validate_category(category_name=category_name, category_id=category.id)
     if validation:
         category.name = category_name
         db.session.commit()
@@ -320,11 +320,16 @@ def categories():
     return render_template("categories.html", categories=categories, form=form)
 
 
-def validate_category(category_name):
+def validate_category(category_name, category_id=None):
+    print(category_name, category_id)
     category = Category.query.filter_by(
         name=category_name, user_id=current_user.id
     ).first()
-    if category:
-        return False
+    print(category)
+    if not category:
+        return True
+    elif category_id:
+        if category.id == category_id:
+            return True
     else:
         return True

@@ -26,5 +26,3 @@ def send_email(email, token):
     msg.sender = "noreply@test.com"
     msg.recipients = [email]
     msg.body = f"Nuoroda slaptažodžiui atstatyti: {url_for('reset_password', token=token, _external=True)}"
-
-    print(msg)

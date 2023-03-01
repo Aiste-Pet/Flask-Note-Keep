@@ -12,6 +12,9 @@ function showInput(select) {
 }
 
 function editCategory(categoryId, categoryName) {
+  const formDelete = document.getElementById(
+    "form-delete-" + categoryId
+  ).outerHTML;
   const row = document.getElementById("category-" + categoryId);
   const nameCell = row.getElementsByTagName("td")[0];
   const input = document.createElement("input");
@@ -37,34 +40,36 @@ function editCategory(categoryId, categoryName) {
   cancelButton.addEventListener("click", function () {
     nameCell.innerHTML = categoryName;
     actionsCell.innerHTML =
-      '<form method="POST" action="/delete_category/' +
-      categoryId +
-      '">' +
-      "</form>" +
       '<button type="button" class="btn btn-primary" onclick="editCategory(' +
       categoryId +
       ", '" +
       categoryName +
       "')\">Edit</button>" +
-      '<button type="submit" class="btn btn-danger">Delete</button>';
+      formDelete;
   });
 
   saveButton.addEventListener("click", function () {
-    const categoryName = document.getElementById("edit-category-input").value;
+    const newCategoryName = document.getElementById(
+      "edit-category-input"
+    ).value;
     $.ajax({
       url: "edit_category/" + categoryId,
       type: "POST",
       data: {
-        name: categoryName,
+        name: newCategoryName,
       },
       success: function (response) {
         if (response.success) {
-          // The category was successfully edited, show a success flash message
+          nameCell.innerHTML = newCategoryName;
+          actionsCell.innerHTML =
+            '<button type="button" class="btn btn-primary" onclick="editCategory(' +
+            categoryId +
+            ", '" +
+            newCategoryName +
+            "')\">Edit</button>" +
+            formDelete;
           flashMessage("success", response.message);
-          // Reload the page to show the updated category
-          window.location.reload();
         } else {
-          // The category name is invalid or already exists, show an error flash message
           flashMessage("error", response.message);
         }
       },
@@ -81,7 +86,16 @@ function flashMessage(type, message) {
   const flashMessage = `
     <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
       ${message}
+      <button
+          type="button"
+          class="reset-btn close"
+          data-dismiss="alert"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
     </div>
+    
   `;
-  flashMessages.innerHTML += flashMessage;
+  flashMessages.innerHTML = flashMessage;
 }
