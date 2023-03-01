@@ -36,9 +36,11 @@ main %}
         style="display: inline"
         onchange="showInput(this)"
       >
-        {% for category in categories %}
-        <option>{{ category.name}}</option>
-        {% endfor %}
+        {% if categories %} {% for category in categories %}
+        <option>{{ category.name }}</option>
+        {% endfor %} {% else %}
+        <option selected disabled>No categories available</option>
+        {% endif %}
         <option>Create new..</option>
       </select>
       {% for error in note_form.category.errors %}
@@ -52,7 +54,6 @@ main %}
         name="other"
         class="form-control"
         style="display: none"
-        onblur="hideInput()"
         disabled
         placeholder="Write new category here"
       />

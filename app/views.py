@@ -161,11 +161,28 @@ def server_error(error):
 @app.route("/", methods=["GET", "POST"])
 def home():
     if current_user.is_authenticated:
-        notes = (
-            Note.query.options(joinedload(Note.category))
-            .filter_by(user_id=current_user.id)
-            .all()
-        )
+        query = request.args.get("query")
+        categories = Category.query.filter_by(user_id=current_user.id).all()
+        category_id = request.args.get("category_id")
+        if query:
+            notes = (
+                Note.query.options(joinedload(Note.category))
+                .filter_by(user_id=current_user.id)
+                .filter(Note.name.ilike(f"%{query}%"))
+            )
+        elif category_id:
+            notes = (
+                Note.query.options(joinedload(Note.category))
+                .filter_by(user_id=current_user.id)
+                .filter_by(category_id=category_id)
+                .all()
+            )
+        else:
+            notes = (
+                Note.query.options(joinedload(Note.category))
+                .filter_by(user_id=current_user.id)
+                .all()
+            )
         note_images = {}
         for note in notes:
             images = (
@@ -173,9 +190,33 @@ def home():
             )
             note_images[note.id] = images
         return render_template(
-            "index.html", notes=notes, note_images=note_images, os=os
+            "index.html",
+            notes=notes,
+            note_images=note_images,
+            os=os,
+            categories=categories,
         )
     return render_template("index.html")
+
+
+@app.route("/search-notes")
+@login_required
+def search_notes():
+    categories = Category.query.filter_by(user_id=current_user.id).all()
+    query = request.args.get("query")
+    notes = (
+        Note.query.options(joinedload(Note.category))
+        .filter_by(user_id=current_user.id)
+        .filter(Note.name.ilike(f"%{query}%"))
+        .all()
+    )
+    note_images = {}
+    for note in notes:
+        images = Image.query.filter_by(note_id=note.id).order_by(Image.id.asc()).all()
+        note_images[note.id] = images
+    return render_template(
+        "index.html", notes=notes, note_images=note_images, os=os, categories=categories
+    )
 
 
 @app.route("/edit_note/<int:note_id>", methods=["GET", "POST"])
@@ -295,7 +336,6 @@ def create_note():
             Note.query.filter_by(
                 name=note_form.name.data,
                 text=note_form.text.data,
-                category_id=selected_category_id.id,
                 user_id=current_user.id,
             )
             .first()
@@ -394,11 +434,9 @@ def delete_image(image_id):
 
 
 def validate_category(category_name, category_id=None):
-    print(category_name, category_id)
     category = Category.query.filter_by(
         name=category_name, user_id=current_user.id
     ).first()
-    print(category)
     if not category:
         return True
     elif category_id:

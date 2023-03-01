@@ -4,7 +4,6 @@ function showInput(select) {
     document.getElementById("form12").removeAttribute("disabled");
     document.getElementById("form12").style.display = "inline-block";
   } else {
-    document.getElementById("inputLabel").style.display = "inline-block";
     document.getElementById("inputDiv").style.display = "none";
     document.getElementById("form12").setAttribute("disabled", "");
     document.getElementById("form12").style.display = "none";
