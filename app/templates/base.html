@@ -96,6 +96,13 @@
             {% if current_user.is_authenticated %}
             <li class="nav-item">
               <a
+                href="{{ url_for('create_note') }}"
+                class="nav-link px-2 text-secondary"
+                >Create note</a
+              >
+            </li>
+            <li class="nav-item">
+              <a
                 href="{{ url_for('home') }}"
                 class="nav-link px-2 text-secondary"
                 >My notes</a

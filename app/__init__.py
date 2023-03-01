@@ -12,11 +12,13 @@ base_dir = os.path.dirname(__file__)
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 app.secret_key = os.environ.get("FLASK_SECRET_KEY")
+
 app.app_context().push()
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(basedir, "data.db")
+app.config["UPLOAD_FOLDER"] = os.path.join(basedir, "static", "notes_uploads")
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)

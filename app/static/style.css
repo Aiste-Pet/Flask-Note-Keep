@@ -76,3 +76,13 @@ a:active {
     color: #000;
     text-shadow: 0 1px 0 #fff;
 }
+
+.note-image {
+    position: relative;
+}
+
+#delete-image-form {
+    position: absolute;
+    right: 5px;
+    bottom: 5px;
+}

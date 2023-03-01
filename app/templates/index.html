@@ -39,8 +39,32 @@ main %} {% if current_user.is_authenticated %}
           </button>
         </form>
       </div>
-      <p class="card-subtitle mb-2 text-muted ">{{ note.category.name }}</p>
+      <p class="card-subtitle mb-2 text-muted">{{ note.category.name }}</p>
       <p class="card-text font-weight-bold">{{ note.text }}</p>
+      {% if note_images %}
+      <div class="note-image">
+        {% for image in note_images[note.id] %}
+        <img
+          src="{{ url_for('static', filename=os.path.join('notes_uploads/', image.file_name)) }}"
+          class="img-thumbnail"
+        />
+        <form
+          method="POST"
+          action="{{ url_for('delete_image', image_id=image.id) }}"
+          id="delete-image-form"
+          class="close"
+        >
+          <button type="submit" class="reset-btn" id="delete-image-button">
+            <img
+              src="{{ url_for('static', filename='trash-can-regular.svg') }}"
+              style="width: 20px; cursor: pointer"
+              alt=""
+            />
+          </button>
+        </form>
+        {% endfor %}
+      </div>
+      {% endif %}
     </div>
   </div>
   {% endfor %}

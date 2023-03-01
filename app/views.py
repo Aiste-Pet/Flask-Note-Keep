@@ -1,4 +1,5 @@
 import jwt
+import os
 from flask import flash, redirect, render_template, request, url_for, jsonify
 from flask_login import current_user, login_user, logout_user, login_required
 from app import app, db, login_manager, bcrypt
@@ -18,6 +19,8 @@ from app.models.Category import Category
 from app.models.Image import Image
 from app.models.Note import Note
 from sqlalchemy.orm import joinedload
+from werkzeug.utils import secure_filename
+import uuid
 
 
 @login_manager.user_loader
@@ -163,7 +166,15 @@ def home():
             .filter_by(user_id=current_user.id)
             .all()
         )
-        return render_template("index.html", notes=notes)
+        note_images = {}
+        for note in notes:
+            images = (
+                Image.query.filter_by(note_id=note.id).order_by(Image.id.asc()).all()
+            )
+            note_images[note.id] = images
+        return render_template(
+            "index.html", notes=notes, note_images=note_images, os=os
+        )
     return render_template("index.html")
 
 
@@ -175,8 +186,8 @@ def edit_note(note_id):
         id=note.category_id, user_id=current_user.id
     ).first()
     categories = Category.query.filter_by(user_id=current_user.id).all()
-    form = NoteForm(request.form)
-    if request.method == "POST" and form.validate():
+    form = NoteForm()
+    if request.method == "POST" and form.validate_on_submit():
         selected_category_name = request.form.get("category")
         if selected_category_name == "Create new..":
             other_value = request.form.get("other")
@@ -194,9 +205,22 @@ def edit_note(note_id):
                 name=selected_category_name
             ).first()
             note.category_id = selected_category_id.id
+        file = request.files.get("attachment")
+        if file:
+            unique_id = uuid.uuid4()
+            filename = (
+                str(note_id)
+                + "_"
+                + str(unique_id)
+                + "_"
+                + secure_filename(file.filename)
+            )
+            file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+            image = Image(file_name=filename, note_id=note_id)
+            db.session.add(image)
+            db.session.commit()
         note.name = form.name.data
         note.text = form.text.data
-
         db.session.commit()
         flash("Note saved successfully", "success")
         return redirect(url_for("home"))
@@ -213,6 +237,16 @@ def edit_note(note_id):
 @login_required
 def delete_note(note_id):
     note = Note.query.get(note_id)
+    images = Image.query.filter_by(note_id=note_id).all()
+    if images:
+        for image in images:
+            filename = image.file_name
+            try:
+                os.remove(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+            except FileNotFoundError:
+                print(f"File {filename} not found. Continuing...")
+            db.session.delete(image)
+            db.session.commit()
     db.session.delete(note)
     db.session.commit()
     flash("Note deleted successfully", "success")
@@ -223,8 +257,8 @@ def delete_note(note_id):
 @login_required
 def create_note():
     categories = Category.query.filter_by(user_id=current_user.id).all()
-    note_form = NoteForm(request.form)
-    if request.method == "POST" and note_form.validate():
+    note_form = NoteForm()
+    if request.method == "POST" and note_form.validate_on_submit():
         selected_category_name = request.form.get("category")
         if selected_category_name == "Create new..":
             other_value = request.form.get("other")
@@ -257,6 +291,30 @@ def create_note():
             )
         db.session.add(note)
         db.session.commit()
+        created_note_id = (
+            Note.query.filter_by(
+                name=note_form.name.data,
+                text=note_form.text.data,
+                category_id=selected_category_id.id,
+                user_id=current_user.id,
+            )
+            .first()
+            .id
+        )
+        file = request.files.get("attachment")
+        if file:
+            unique_id = uuid.uuid4()
+            filename = (
+                str(created_note_id)
+                + "_"
+                + str(unique_id)
+                + "_"
+                + secure_filename(file.filename)
+            )
+            file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+            image = Image(file_name=filename, note_id=created_note_id)
+            db.session.add(image)
+            db.session.commit()
         flash("Note created successfully", "success")
         return redirect(url_for("home"))
     return render_template(
@@ -318,6 +376,21 @@ def categories():
     categories = Category.query.filter_by(user_id=current_user.id).all()
     form = CategoryForm(request.form)
     return render_template("categories.html", categories=categories, form=form)
+
+
+@app.route("/delete_image/<int:image_id>", methods=["GET", "POST"])
+@login_required
+def delete_image(image_id):
+    image = Image.query.get(image_id)
+    filename = image.file_name
+    try:
+        os.remove(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+    except FileNotFoundError:
+        print(f"File {filename} not found. Continuing...")
+    db.session.delete(image)
+    db.session.commit()
+    flash("Image deleted successfully", "success")
+    return redirect(url_for("home"))
 
 
 def validate_category(category_name, category_id=None):
