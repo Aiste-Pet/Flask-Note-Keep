@@ -86,3 +86,20 @@ a:active {
     right: 5px;
     bottom: 5px;
 }
+
+.buttons-top {}
+
+.btn-top {
+    width: 35% !important;
+
+
+}
+
+@media only screen and (max-width: 900px) {
+    .buttons-top {
+        flex-direction: column;
+    }
+
+    .btn-top {
+        width: 100% !important;
+    }

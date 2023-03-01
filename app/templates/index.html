@@ -1,33 +1,40 @@
 {% extends 'base.html' %} {% block title %}Your Notes{% endblock %} {% block
 main %} {% if current_user.is_authenticated %}
-<div class="mb-5 d-flex justify-content-between">
-  <form
-    method="GET"
-    action="{{ url_for('search_notes') }}"
-    class="form-inline my-2 my-lg-0 d-flex"
-  >
-    <button class="btn btn-primary my-2 my-sm-0" type="submit">Search</button>
-    <input
-      class="form-control mr-sm-2"
-      type="search"
-      placeholder="Search by note name"
-      aria-label="Search"
-      name="query"
-    />
-  </form>
-  <form method="GET" action="{{ url_for('home') }}" class="d-flex">
-    <input type="submit" value="Filter" class="btn btn-primary my-2 my-sm-0" />
-    <select name="category_id" class="form-control mr-sm-2 p-2">
-      <option value="">All Categories</option>
-      {% for category in categories %}
-      <option value="{{ category.id }}">{{ category.name }}</option>
-      {% endfor %}
-    </select>
-  </form>
-  <a href="{{ url_for('home') }}" class="btn btn-secondary btn-lg pd-2"
-    >Clear</a
-  >
-
+<div class="mb-5 d-flex justify-content-between buttons-top">
+  <div class="d-flex gap-2 align-items-center buttons-top mb-2">
+    <form
+      method="GET"
+      action="{{ url_for('search_notes') }}"
+      class="form-inline d-flex btn-top"
+    >
+      <button class="btn btn-light my-2 my-sm-0 w-50" type="submit">
+        Search
+      </button>
+      <input
+        class="form-control mr-sm-2"
+        type="search"
+        placeholder="Search notes"
+        aria-label="Search"
+        name="query"
+      />
+    </form>
+    <form method="GET" action="{{ url_for('home') }}" class="d-flex btn-top">
+      <input
+        type="submit"
+        value="Filter"
+        class="btn btn-light my-2 my-sm-0 w-50"
+      />
+      <select name="category_id" class="form-control mr-sm-2 p-2">
+        <option value="">All Categories</option>
+        {% for category in categories %}
+        <option value="{{ category.id }}">{{ category.name }}</option>
+        {% endfor %}
+      </select>
+    </form>
+    <a href="{{ url_for('home') }}" class="btn btn-light pd-2 btn-top"
+      >Clear all filters</a
+    >
+  </div>
   <button type="button" class="btn btn-primary btn-lg pd-2">
     <a href="{{ url_for('create_note') }}" class="text-white"
       ><b>Create New Note</b>
