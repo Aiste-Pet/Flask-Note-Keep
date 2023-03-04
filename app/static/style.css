@@ -87,8 +87,6 @@ a:active {
     bottom: 5px;
 }
 
-.buttons-top {}
-
 .btn-top {
     width: 35% !important;
 
@@ -103,3 +101,4 @@ a:active {
     .btn-top {
         width: 100% !important;
     }
+}
