@@ -41,12 +41,14 @@
         style="display: inline"
         onchange="showInput(this)"
       >
-        {% for category in categories %} {% if category.name ==
-        note_category.name %}
+        {% if categories %} {% for category in categories %} {% if category.name
+        == note_category.name %}
         <option selected>{{ category.name}}</option>
         {% else %}
         <option>{{ category.name}}</option>
-        {% endif %}{% endfor %}
+        {% endif %}{% endfor %}{% else %}
+        <option selected disabled>No categories available</option>
+        {% endif %}
         <option>Create new..</option>
       </select>
       {% for error in form.category.errors %}
