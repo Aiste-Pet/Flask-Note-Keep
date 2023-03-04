@@ -1,0 +1,104 @@
+.navbar {
+    background-color: #FFF !important;
+}
+
+.bg-primary {
+    background-color: #ddd3f3 !important;
+}
+
+.bg-primary:hover {
+    background-color: #cfbdf5 !important;
+}
+
+.btn-primary {
+    background-color: #866cc4 !important;
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #6b4fae !important;
+}
+
+a:link,
+a:visited,
+a:hover,
+a:active {
+    text-decoration: none;
+}
+
+.card-title {
+    /* word-wrap: break-word !important; */
+    width: 75%;
+}
+
+.reset-btn {
+    border: none;
+    margin: 0;
+    padding: 0;
+    width: auto;
+    overflow: visible;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    line-height: normal;
+}
+
+.plus-icon {
+    fill: #6b4fae !important;
+}
+
+.disaplayInput {
+    display: none;
+}
+
+.navbar-collapse {
+    display: flex;
+    justify-content: space-between;
+}
+
+.show,
+.collapsing {
+    display: block;
+}
+
+.alert-dismissible .close {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: .75rem 1.25rem;
+    color: inherit;
+}
+
+.close {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #000;
+    text-shadow: 0 1px 0 #fff;
+}
+
+.note-image {
+    position: relative;
+}
+
+#delete-image-form {
+    position: absolute;
+    right: 5px;
+    bottom: 5px;
+}
+
+.btn-top {
+    width: 35% !important;
+
+
+}
+
+@media only screen and (max-width: 900px) {
+    .buttons-top {
+        flex-direction: column;
+    }
+
+    .btn-top {
+        width: 100% !important;
+    }
+}

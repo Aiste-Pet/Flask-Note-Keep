@@ -1,5 +1,6 @@
 import jwt
-from flask import flash, redirect, render_template, request, url_for
+import os
+from flask import flash, redirect, render_template, request, url_for, jsonify
 from flask_login import current_user, login_user, logout_user, login_required
 from app import app, db, login_manager, bcrypt
 from app.forms import (
@@ -8,10 +9,18 @@ from app.forms import (
     UserProfileEditForm,
     UserRequestResetPasswordForm,
     UserResetPasswordForm,
+    NoteForm,
+    CategoryForm,
 )
 from app.models.User import User
 from app.utils import save_picture, send_email
 from datetime import datetime, timezone, timedelta
+from app.models.Category import Category
+from app.models.Image import Image
+from app.models.Note import Note
+from sqlalchemy.orm import joinedload
+from werkzeug.utils import secure_filename
+import uuid
 
 
 @login_manager.user_loader
@@ -110,10 +119,6 @@ def logout():
     return redirect(url_for("home"))
 
 
-@app.route("/", methods=["GET", "POST"])
-def home():
-    return render_template("index.html")
-
 @app.route("/profile", methods=["GET", "POST"])
 @login_required
 def profile():
@@ -125,7 +130,7 @@ def profile():
             current_user.picture = picture
         current_user.email = form.email.data
         db.session.commit()
-        flash("Tavo paskyra atnaujinta!", "success")
+        flash("Your profile has been updated!", "success")
         return redirect(url_for("profile"))
     elif request.method == "GET":
         form.email.data = current_user.email
@@ -151,3 +156,291 @@ def not_found(error):
 @app.errorhandler(500)
 def server_error(error):
     return render_template("server_error.html"), 500
+
+
+@app.route("/", methods=["GET", "POST"])
+def home():
+    if current_user.is_authenticated:
+        query = request.args.get("query")
+        categories = Category.query.filter_by(user_id=current_user.id).all()
+        category_id = request.args.get("category_id")
+        if query:
+            notes = (
+                Note.query.options(joinedload(Note.category))
+                .filter_by(user_id=current_user.id)
+                .filter(Note.name.ilike(f"%{query}%"))
+            )
+        elif category_id:
+            notes = (
+                Note.query.options(joinedload(Note.category))
+                .filter_by(user_id=current_user.id)
+                .filter_by(category_id=category_id)
+                .all()
+            )
+        else:
+            notes = (
+                Note.query.options(joinedload(Note.category))
+                .filter_by(user_id=current_user.id)
+                .all()
+            )
+        note_images = {}
+        for note in notes:
+            images = (
+                Image.query.filter_by(note_id=note.id).order_by(Image.id.asc()).all()
+            )
+            note_images[note.id] = images
+        return render_template(
+            "index.html",
+            notes=notes,
+            note_images=note_images,
+            os=os,
+            categories=categories,
+        )
+    return render_template("index.html")
+
+
+@app.route("/search-notes")
+@login_required
+def search_notes():
+    categories = Category.query.filter_by(user_id=current_user.id).all()
+    query = request.args.get("query")
+    notes = (
+        Note.query.options(joinedload(Note.category))
+        .filter_by(user_id=current_user.id)
+        .filter(Note.name.ilike(f"%{query}%"))
+        .all()
+    )
+    note_images = {}
+    for note in notes:
+        images = Image.query.filter_by(note_id=note.id).order_by(Image.id.asc()).all()
+        note_images[note.id] = images
+    return render_template(
+        "index.html", notes=notes, note_images=note_images, os=os, categories=categories
+    )
+
+
+@app.route("/edit_note/<int:note_id>", methods=["GET", "POST"])
+@login_required
+def edit_note(note_id):
+    note = Note.query.get(note_id)
+    note_category = Category.query.filter_by(
+        id=note.category_id, user_id=current_user.id
+    ).first()
+    categories = Category.query.filter_by(user_id=current_user.id).all()
+    form = NoteForm()
+    if request.method == "POST" and form.validate_on_submit():
+        selected_category_name = request.form.get("category")
+        if selected_category_name == "Create new..":
+            other_value = request.form.get("other")
+            validation = validate_category(category_name=other_value)
+            if validation:
+                category = Category(
+                    name=other_value,
+                    user_id=current_user.id,
+                )
+            db.session.add(category)
+            db.session.commit()
+            note.category_id = Category.query.filter_by(name=other_value).first().id
+        else:
+            selected_category_id = Category.query.filter_by(
+                name=selected_category_name
+            ).first()
+            note.category_id = selected_category_id.id
+        file = request.files.get("attachment")
+        if file:
+            unique_id = uuid.uuid4()
+            filename = (
+                str(note_id)
+                + "_"
+                + str(unique_id)
+                + "_"
+                + secure_filename(file.filename)
+            )
+            file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+            image = Image(file_name=filename, note_id=note_id)
+            db.session.add(image)
+            db.session.commit()
+        note.name = form.name.data
+        note.text = form.text.data
+        db.session.commit()
+        flash("Note saved successfully", "success")
+        return redirect(url_for("home"))
+    return render_template(
+        "edit_note.html",
+        note=note,
+        form=form,
+        note_category=note_category,
+        categories=categories,
+    )
+
+
+@app.route("/delete_note/<int:note_id>", methods=["GET", "POST"])
+@login_required
+def delete_note(note_id):
+    note = Note.query.get(note_id)
+    images = Image.query.filter_by(note_id=note_id).all()
+    if images:
+        for image in images:
+            filename = image.file_name
+            try:
+                os.remove(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+            except FileNotFoundError:
+                print(f"File {filename} not found. Continuing...")
+            db.session.delete(image)
+            db.session.commit()
+    db.session.delete(note)
+    db.session.commit()
+    flash("Note deleted successfully", "success")
+    return redirect(url_for("home"))
+
+
+@app.route("/create_note", methods=["GET", "POST"])
+@login_required
+def create_note():
+    categories = Category.query.filter_by(user_id=current_user.id).all()
+    note_form = NoteForm()
+    if request.method == "POST" and note_form.validate_on_submit():
+        selected_category_name = request.form.get("category")
+        if selected_category_name == "Create new..":
+            other_value = request.form.get("other")
+            validation = validate_category(category_name=other_value)
+            if validation:
+                category = Category(
+                    name=other_value,
+                    user_id=current_user.id,
+                )
+                db.session.add(category)
+                db.session.commit()
+            else:
+                flash("This category already exists", "danger")
+            other_value_id = Category.query.filter_by(name=other_value).first().id
+            note = Note(
+                name=note_form.name.data,
+                text=note_form.text.data,
+                category_id=other_value_id,
+                user_id=current_user.id,
+            )
+        else:
+            selected_category_id = Category.query.filter_by(
+                name=selected_category_name
+            ).first()
+            note = Note(
+                name=note_form.name.data,
+                text=note_form.text.data,
+                category_id=selected_category_id.id,
+                user_id=current_user.id,
+            )
+        db.session.add(note)
+        db.session.commit()
+        created_note_id = (
+            Note.query.filter_by(
+                name=note_form.name.data,
+                text=note_form.text.data,
+                user_id=current_user.id,
+            )
+            .first()
+            .id
+        )
+        file = request.files.get("attachment")
+        if file:
+            unique_id = uuid.uuid4()
+            filename = (
+                str(created_note_id)
+                + "_"
+                + str(unique_id)
+                + "_"
+                + secure_filename(file.filename)
+            )
+            file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+            image = Image(file_name=filename, note_id=created_note_id)
+            db.session.add(image)
+            db.session.commit()
+        flash("Note created successfully", "success")
+        return redirect(url_for("home"))
+    return render_template(
+        "create_note.html",
+        note_form=note_form,
+        categories=categories,
+    )
+
+
+@app.route("/create_category", methods=["GET", "POST"])
+@login_required
+def create_category():
+    form = CategoryForm(request.form)
+    if request.method == "POST" and form.validate():
+        category_name = request.form.get("name")
+        validation = validate_category(category_name=category_name)
+        if validation:
+            category = Category(
+                name=category_name,
+                user_id=current_user.id,
+            )
+            db.session.add(category)
+            db.session.commit()
+            flash("Category created successfully", "success")
+        else:
+            flash("This category already exists", "danger")
+    return redirect(url_for("categories"))
+
+
+@app.route("/delete_category/<int:category_id>", methods=["GET", "POST"])
+@login_required
+def delete_category(category_id):
+    category = Category.query.get(category_id)
+    db.session.delete(category)
+    db.session.commit()
+    flash("Category deleted successfully", "success")
+    return redirect(url_for("categories"))
+
+
+@app.route("/edit_category/<int:category_id>", methods=["POST"])
+@login_required
+def edit_category(category_id):
+    category = Category.query.get(category_id)
+    data = request.form
+    category_name = data.get("name")
+    validation = validate_category(category_name=category_name, category_id=category.id)
+    if validation:
+        category.name = category_name
+        db.session.commit()
+        response = {"success": True, "message": "Category edited successfully"}
+    else:
+        response = {"success": False, "message": "This category already exists"}
+    return jsonify(response)
+
+
+@app.route("/categories", methods=["GET"])
+@login_required
+def categories():
+    categories = Category.query.filter_by(user_id=current_user.id).all()
+    form = CategoryForm(request.form)
+    return render_template("categories.html", categories=categories, form=form)
+
+
+@app.route("/delete_image/<int:image_id>", methods=["GET", "POST"])
+@login_required
+def delete_image(image_id):
+    image = Image.query.get(image_id)
+    filename = image.file_name
+    try:
+        os.remove(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+    except FileNotFoundError:
+        print(f"File {filename} not found. Continuing...")
+    db.session.delete(image)
+    db.session.commit()
+    flash("Image deleted successfully", "success")
+    return redirect(url_for("home"))
+
+
+def validate_category(category_name, category_id=None):
+    category = Category.query.filter_by(
+        name=category_name, user_id=current_user.id
+    ).first()
+    if not category:
+        return True
+    elif category_id:
+        if category.id == category_id:
+            return True
+    else:
+        return True

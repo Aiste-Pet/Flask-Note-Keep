@@ -1,13 +1,11 @@
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import (
-    StringField,
-    PasswordField,
-    BooleanField,
-)
-from wtforms.validators import DataRequired, EqualTo, Email, ValidationError
+from wtforms import StringField, PasswordField, BooleanField, TextAreaField
+from wtforms.validators import DataRequired, EqualTo, Email, ValidationError, Length
 from app.models.User import User
+from app.models.Category import Category
+import imghdr
 
 
 class RegistrationForm(FlaskForm):
@@ -32,7 +30,8 @@ class LoginForm(FlaskForm):
 class UserProfileEditForm(FlaskForm):
     email = StringField("E-mail", [DataRequired(), Email()])
     picture = FileField(
-        "Change profile picture", validators=[FileAllowed(["jpg", "png"])]
+        "Change profile picture",
+        validators=[FileAllowed(["jpg", "png"], "Images only!")],
     )
 
     def check_email(self, email):
@@ -51,3 +50,19 @@ class UserResetPasswordForm(FlaskForm):
     confirm_password = PasswordField(
         "Repeat password", [EqualTo("password", "Passwords must match.")]
     )
+
+
+class NoteForm(FlaskForm):
+    name = StringField("Name", [DataRequired(), Length(max=255)])
+    text = StringField("Text", [DataRequired()])
+    category = StringField("Category", [DataRequired(), Length(max=255)])
+    attachment = FileField(
+        "Add picture",
+        validators=[
+            FileAllowed(["jpg", "png"], "Only .jpg and .png files are allowed.")
+        ],
+    )
+
+
+class CategoryForm(FlaskForm):
+    name = StringField("Name", [DataRequired(), Length(max=255)])

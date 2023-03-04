@@ -1,7 +1,108 @@
-{% extends 'base.html' %} {% block title %}Home{% endblock %} {% block main %}
-{% if current_user.is_authenticated %}
-<h2 class="mb-5 mx-auto">Hello, {{ current_user.email }}</h2>
-<h3 class="mb-5 mx-auto"><a href="{{ url_for('groups') }}">Your groups</a></h3>
+{% extends 'base.html' %} {% block title %}Your Notes{% endblock %} {% block
+main %} {% if current_user.is_authenticated %}
+<div class="mb-5 d-flex justify-content-between buttons-top">
+  <div class="d-flex gap-2 align-items-center buttons-top mb-2">
+    <form
+      method="GET"
+      action="{{ url_for('search_notes') }}"
+      class="form-inline d-flex btn-top"
+    >
+      <button class="btn btn-light my-2 my-sm-0 w-50" type="submit">
+        Search
+      </button>
+      <input
+        class="form-control mr-sm-2"
+        type="search"
+        placeholder="Search notes"
+        aria-label="Search"
+        name="query"
+      />
+    </form>
+    <form method="GET" action="{{ url_for('home') }}" class="d-flex btn-top">
+      <input
+        type="submit"
+        value="Filter"
+        class="btn btn-light my-2 my-sm-0 w-50"
+      />
+      <select name="category_id" class="form-control mr-sm-2 p-2">
+        <option value="">All Categories</option>
+        {% for category in categories %}
+        <option value="{{ category.id }}">{{ category.name }}</option>
+        {% endfor %}
+      </select>
+    </form>
+    <a href="{{ url_for('home') }}" class="btn btn-light pd-2 btn-top"
+      >Clear all filters</a
+    >
+  </div>
+  <button type="button" class="btn btn-primary btn-lg pd-2">
+    <a href="{{ url_for('create_note') }}" class="text-white"
+      ><b>Create New Note</b>
+    </a>
+  </button>
+</div>
+<div class="container d-flex col-12 justify-content-around flex-wrap">
+  {% for note in notes %}
+
+  <div
+    class="card mb-5 bg-primary shadow p-3 mb-5 rounded"
+    style="width: 18rem"
+  >
+    <div class="card-body">
+      <div
+        class="d-flex justify-content-between align-items-baseline flex-wrap"
+      >
+        <h5 class="card-title text-muted">{{ note.name }}</h5>
+        <a href="edit_note/{{note.id}}">
+          <img
+            src="{{ url_for('static', filename='pencil-solid.svg') }}"
+            style="width: 20px; cursor: pointer"
+            alt=""
+        /></a>
+        <form
+          method="POST"
+          action="{{ url_for('delete_note', note_id=note.id) }}"
+          id="delete-note-form"
+        >
+          <button type="submit" class="reset-btn" id="delete-note-button">
+            <img
+              src="{{ url_for('static', filename='trash-can-regular.svg') }}"
+              style="width: 20px; cursor: pointer"
+              alt=""
+            />
+          </button>
+        </form>
+      </div>
+      <p class="card-subtitle mb-2 text-muted">{{ note.category.name }}</p>
+      <p class="card-text font-weight-bold">{{ note.text }}</p>
+      {% if note_images %}
+      <div class="note-image">
+        {% for image in note_images[note.id] %}
+        <img
+          src="{{ url_for('static', filename=os.path.join('notes_uploads/', image.file_name)) }}"
+          class="img-thumbnail"
+        />
+        <form
+          method="POST"
+          action="{{ url_for('delete_image', image_id=image.id) }}"
+          id="delete-image-form"
+          class="close"
+        >
+          <button type="submit" class="reset-btn" id="delete-image-button">
+            <img
+              src="{{ url_for('static', filename='trash-can-regular.svg') }}"
+              style="width: 20px; cursor: pointer"
+              alt=""
+            />
+          </button>
+        </form>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
 {% else %}
 <p class="text-center">
   NoteMate is a note-taking app that allows users to create and organize notes

@@ -1,0 +1,63 @@
+{% extends 'base.html' %} {% block title %}Categories{% endblock %} {% block
+main %}
+<h1>Your categories</h1>
+{% if categories %}
+<div class="container pt-4">
+  <table class="table table-hover table-sm">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for category in categories %}
+      <tr id="category-{{ category.id }}">
+        <td>{{ category.name }}</td>
+        <td class="d-flex justify-content-end gap-3">
+          <button
+            type="button"
+            class="btn btn-primary"
+            onclick="editCategory('{{ category.id }}', '{{ category.name }}')"
+          >
+            Edit
+          </button>
+          <form
+            method="POST"
+            id="form-delete-{{ category.id }}"
+            action="{{ url_for('delete_category', category_id=category.id) }}"
+          >
+            <button type="submit" class="btn btn-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  <div class="pt-4">
+    <form method="POST" action="{{ url_for('create_category') }}">
+      {{ form.hidden_tag() }}
+      <div class="form-outline mt-2">
+        <label class="mb-2" for="name"><b>Create category</b></label>
+        <input
+          type="text"
+          name="name"
+          class="form-control"
+          placeholder="Write new category here"
+        />
+      </div>
+      {% for error in form.name.errors %}
+      <div style="color: red">{{ error }}</div>
+      {% endfor %}
+      <div class="d-flex justify-content-between align-items-baseline">
+        <button class="btn btn-primary mt-3" type="submit">Create</button>
+        <button class="btn btn-secondary mt-3" type="button">
+          <a class="text-white" href="{{ url_for('categories') }}">Cancel</a>
+        </button>
+      </div>
+    </form>
+  </div>
+  {% endblock %}
+</div>
